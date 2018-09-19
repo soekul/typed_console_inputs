@@ -49,9 +49,9 @@ class _GetchWindows(object):
 getch = _Getch()
 
 
-class InputMethodBase(object):
+class RegExInputValidatorMethod(object):
     def __init__(self, re_eval, pre_return=None, *args, **kwargs):
-        super(InputMethodBase, self).__init__(*args, **kwargs)
+        super(RegExInputValidatorMethod, self).__init__(*args, **kwargs)
         self.re_eval = re_eval
         self.pre_return = pre_return
 
