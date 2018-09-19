@@ -54,6 +54,17 @@ class RegExInputValidatorMethod(object):
         super(RegExInputValidatorMethod, self).__init__(*args, **kwargs)
         self.re_eval = re_eval
 
+    def evaluate_value(self, prompt_value, value):
+        #  check current ret_val against
+        #  regular expression
+        match = self.re_eval.fullmatch(value)
+        if match is not None:
+            return True
+        else:
+            print("\nInvalid input, try again.")
+            print(prompt_value, value, end='', flush=True)
+            return False
+
     def __call__(self, prompt_val, *args, **kwargs):
         # echo the prompt before reading input
         print(prompt_val, end='', flush=True)
@@ -65,14 +76,9 @@ class RegExInputValidatorMethod(object):
             c = getch()
 
             if ord(c) == 13:  # carriage return
-                #  User has pressed enter, check current ret_val against
-                #  regular expression
-                match = self.re_eval.fullmatch(ret_val)
-                if match is not None:
+                #  User has pressed enter, evalute_value
+                if self.evaluate_value(prompt_val, ret_val):
                     break
-                else:
-                    print("\nInvalid input, try again.")
-                    print(prompt_val, ret_val, end='', flush=True)
 
             elif ord(c) in [3, 4]:  # ctrl+c and ctrl+d
                 #  Exit if ctrl+c/d are pressed
