@@ -42,34 +42,31 @@ DATE_RE = re.compile(
 
 
 class CommaDelimitedNumericBase(RegExInputValidatorMethod):
-    def __call__(self, *args, **kwargs):
-        ret_val = super(CommaDelimitedNumericBase, self)\
-            .__call__(*args, **kwargs)
-        return ret_val.replace(",", '')  # remove commas before casting
+    def convert_value(self, value):
+        return value.replace(",", '')  # remove commas before casting
 
 
 class IntInputMethod(CommaDelimitedNumericBase):
     re_eval = INT_RE
 
-    def __call__(self, *args, **kwargs):
-        ret_val = super(IntInputMethod, self).__call__(*args, **kwargs)
-        return int(ret_val)
+    def convert_value(self, value):
+        return int(super(IntInputMethod, self).convert_value(value))
 
 
 class FloatInputMethod(CommaDelimitedNumericBase):
     re_eval = DECIMAL_RE
 
-    def __call__(self, *args, **kwargs):
-        ret_val = super(FloatInputMethod, self).__call__(*args, **kwargs)
-        return float(ret_val)
+    def convert_value(self, value):
+        return float(super(FloatInputMethod, self).convert_value(value))
 
 
 class DecimalInputMethod(CommaDelimitedNumericBase):
     re_eval = DECIMAL_RE
 
-    def __call__(self, *args, **kwargs):
-        ret_val = super(DecimalInputMethod, self).__call__(*args, **kwargs)
-        return decimal.Decimal(ret_val)
+    def convert_value(self, value):
+        return decimal.Decimal(
+            super(DecimalInputMethod, self).convert_value(value)
+        )
 
 
 class DateInputMethod(RegExInputValidatorMethod):
@@ -100,9 +97,34 @@ class DateInputMethod(RegExInputValidatorMethod):
         else:
             return match_valid
 
-    def __call__(self, *args, **kwargs):
-        ret_val = super(DateInputMethod, self).__call__(*args, **kwargs)
+    def convert_value(self, value):
         return self._dt_obj
+
+
+class MaskedInputMethod(RegExInputValidatorMethod):
+    mask_char = '*'
+
+    def __init__(self, mask_char=None, *args, **kwargs):
+        super(MaskedInputMethod, self).__init__(*args, **kwargs)
+        if mask_char is not None:
+            self.mask_char = mask_char
+
+    def print_line(self, prompt_value, value, end=''):
+        args = [prompt_value]
+        if self.mask_char != '':
+            args.append(self.mask_char * len(value))
+        print(end=end, flush=True, *args)
+
+    def __call__(self, prompt_val, mask_char=None, *args, **kwargs):
+        old_char = None
+        if mask_char is not None and mask_char != self.mask_char:
+            old_char = self.mask_char
+            self.mask_char = mask_char
+        ret_val = super(MaskedInputMethod, self)\
+            .__call__(prompt_val, *args, **kwargs)
+        if old_char is not None:
+            self.mask_char = old_char
+        return ret_val
 
 
 int_input = IntInputMethod()
@@ -110,3 +132,4 @@ float_input = FloatInputMethod()
 money_input = FloatInputMethod(MONEY_RE)
 decimal_input = DecimalInputMethod()
 date_input = DateInputMethod()
+password_input = MaskedInputMethod()
