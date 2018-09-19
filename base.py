@@ -82,7 +82,7 @@ class RegExInputValidatorMethod(object):
                 #  Handle backspace/delete by starting with a carriage return
                 #  then writing spaces and ending with anther carriage return
                 #  before writing the prompt and return value again
-                num_spaces = len(ret_val) + len(prompt_val) + 3
+                num_spaces = len(ret_val) + len(prompt_val)
                 print('\r', " " * num_spaces, end='\r', flush=True)
                 if len(ret_val) > 0:
                     ret_val = ret_val[:-1]
