@@ -4,12 +4,13 @@ __author__ = 'Luke Stamm - soekul@soekul.com'
 import sys
 
 
-class _Getch:
+class _Getch(object):
     """
     Gets a single character from standard input.
     Does not echo to the screen.
     """
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(_Getch, self).__init__(*args, **kwargs)
         try:
             self.impl = _GetchWindows()
         except ImportError:
@@ -18,8 +19,9 @@ class _Getch:
     def __call__(self): return self.impl()
 
 
-class _GetchUnix:
-    def __init__(self):
+class _GetchUnix(object):
+    def __init__(self, *args, **kwargs):
+        super(_GetchUnix, self).__init__(*args, **kwargs)
         import tty, sys
 
     def __call__(self):
@@ -34,8 +36,9 @@ class _GetchUnix:
         return ch
 
 
-class _GetchWindows:
-    def __init__(self):
+class _GetchWindows(object):
+    def __init__(self, *args, **kwargs):
+        super(_GetchWindows, self).__init__(*args, **kwargs)
         import msvcrt
 
     def __call__(self):
@@ -46,8 +49,13 @@ class _GetchWindows:
 getch = _Getch()
 
 
-def input_meth_factory(re_eval, pre_return=None):
-    def ret_func(prompt_val):
+class InputMethodBase(object):
+    def __init__(self, re_eval, pre_return=None, *args, **kwargs):
+        super(InputMethodBase, self).__init__(*args, **kwargs)
+        self.re_eval = re_eval
+        self.pre_return = pre_return
+
+    def __call__(self, prompt_val, *args, **kwargs):
         # echo the prompt before reading input
         print(prompt_val, end='', flush=True)
         line_val = prompt_val
@@ -60,7 +68,7 @@ def input_meth_factory(re_eval, pre_return=None):
             if ord(c) == 13:  # carriage return
                 #  User has pressed enter, check current ret_val against
                 #  regular expression
-                match = re_eval.fullmatch(ret_val)
+                match = self.re_eval.fullmatch(ret_val)
                 if match is not None:
                     break
                 else:
@@ -88,8 +96,7 @@ def input_meth_factory(re_eval, pre_return=None):
                 print(" " * num_spaces, end='\r', flush=True)
                 print(prompt_val, ret_val, end='', flush=True)
 
-        if pre_return is not None and callable(pre_return):
-            ret_val = pre_return(ret_val)
-        return ret_val
+        if self.pre_return is not None and callable(self.pre_return):
+            ret_val = self.pre_return(ret_val)
 
-    return ret_func
+        return ret_val
