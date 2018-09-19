@@ -1,6 +1,7 @@
 __author__ = 'Luke Stamm - soekul@soekul.com'
 
 
+import re
 import sys
 
 
@@ -50,25 +51,31 @@ getch = _Getch()
 
 
 class RegExInputValidatorMethod(object):
-    def __init__(self, re_eval, *args, **kwargs):
+    re_eval = re.compile(r"^.*$")
+
+    def __init__(self, re_eval=None, *args, **kwargs):
         super(RegExInputValidatorMethod, self).__init__(*args, **kwargs)
-        self.re_eval = re_eval
+        if re_eval is not None:
+            self.re_eval = re_eval
+        self.match = None
+
+    def evaluate_failed(self, prompt_value, value):
+        print("\nInvalid input, try again.")
+        print(prompt_value, value, end='', flush=True)
+        return False
 
     def evaluate_value(self, prompt_value, value):
         #  check current ret_val against
         #  regular expression
-        match = self.re_eval.fullmatch(value)
-        if match is not None:
+        self.match = self.re_eval.fullmatch(value)
+        if self.match is not None:
             return True
         else:
-            print("\nInvalid input, try again.")
-            print(prompt_value, value, end='', flush=True)
-            return False
+            return self.evaluate_failed(prompt_value, value)
 
     def __call__(self, prompt_val, *args, **kwargs):
         # echo the prompt before reading input
         print(prompt_val, end='', flush=True)
-        line_val = prompt_val
         ret_val = ""
 
         # break on enter, bail on ctrl+c/d
@@ -76,7 +83,7 @@ class RegExInputValidatorMethod(object):
             c = getch()
 
             if ord(c) == 13:  # carriage return
-                #  User has pressed enter, evalute_value
+                #  User has pressed enter, evaluate_value
                 if self.evaluate_value(prompt_val, ret_val):
                     break
 
