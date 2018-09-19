@@ -50,10 +50,9 @@ getch = _Getch()
 
 
 class RegExInputValidatorMethod(object):
-    def __init__(self, re_eval, pre_return=None, *args, **kwargs):
+    def __init__(self, re_eval, *args, **kwargs):
         super(RegExInputValidatorMethod, self).__init__(*args, **kwargs)
         self.re_eval = re_eval
-        self.pre_return = pre_return
 
     def __call__(self, prompt_val, *args, **kwargs):
         # echo the prompt before reading input
@@ -96,7 +95,5 @@ class RegExInputValidatorMethod(object):
                 print(" " * num_spaces, end='\r', flush=True)
                 print(prompt_val, ret_val, end='', flush=True)
 
-        if self.pre_return is not None and callable(self.pre_return):
-            ret_val = self.pre_return(ret_val)
-
+        print('\n', end='', flush=True)
         return ret_val
