@@ -128,11 +128,6 @@ class RegExInputValidatorMethod(object):
     def print_line(self, prompt_value, value, end=''):
         """
         Echoes the current line in its entirety
-        ABCDEF_
-        0123456
-
-        ABCDEF_
-        0123456
         :param prompt_value:
         :param value:
         :param end:

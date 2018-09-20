@@ -41,32 +41,53 @@ DATE_RE = re.compile(
 # DATE_RE = re.compile(r"^((?P<Ayear>\d{4})[-/](?P<Amonth>(0?[1-9])|(1[012]))[-/](?P<Aday>(0?[1-9])|([12][0-9])|(3[01])))|((?P<Bmonth>(0?[1-9])|(1[012]))[-/](?P<Bday>(0?[1-9])|([12][0-9])|(3[01]))[-/](?P<Byear>\d{4}))$")
 
 
-class CommaDelimitedNumericBase(RegExInputValidatorMethod):
+class StandardCastMixin(object):
+    type_class = int
+
+    def __init__(self, *args, **kwargs):
+        if 'type_class' in kwargs:
+            self.type_class = kwargs.pop('type_class')
+        super(StandardCastMixin, self).__init__(*args, **kwargs)
+
     def convert_value(self, value):
-        return value.replace(",", '')  # remove commas before casting
+        return self.type_class(super(StandardCastMixin, self)
+                               .convert_value(value))
 
 
-class IntInputMethod(CommaDelimitedNumericBase):
+class RemoveCharsMixin(object):
+    chars_to_remove = []
+
+    def __init__(self, *args, **kwargs):
+        if 'chars_to_remove' in kwargs:
+            self.chars_to_remove = kwargs.pop('chars_to_remove')
+        super(RemoveCharsMixin, self).__init__(*args, **kwargs)
+
+    def convert_value(self, value):
+        ret_val = value
+        for char in self.chars_to_remove:
+            ret_val = ret_val.replace(char, '')
+        return ret_val
+
+
+class IntInputMethod(StandardCastMixin, RemoveCharsMixin,
+                     RegExInputValidatorMethod):
+    type_class = int
+    chars_to_remove = [',']
     re_eval = INT_RE
 
-    def convert_value(self, value):
-        return int(super(IntInputMethod, self).convert_value(value))
 
-
-class FloatInputMethod(CommaDelimitedNumericBase):
+class FloatInputMethod(StandardCastMixin, RemoveCharsMixin,
+                       RegExInputValidatorMethod):
+    type_class = float
+    chars_to_remove = [',']
     re_eval = DECIMAL_RE
 
-    def convert_value(self, value):
-        return float(super(FloatInputMethod, self).convert_value(value))
 
-
-class DecimalInputMethod(CommaDelimitedNumericBase):
+class DecimalInputMethod(StandardCastMixin, RemoveCharsMixin,
+                         RegExInputValidatorMethod):
+    type_class = decimal.Decimal
+    chars_to_remove = [',']
     re_eval = DECIMAL_RE
-
-    def convert_value(self, value):
-        return decimal.Decimal(
-            super(DecimalInputMethod, self).convert_value(value)
-        )
 
 
 class DateInputMethod(RegExInputValidatorMethod):
@@ -131,7 +152,8 @@ class MaskedInputMethod(RegExInputValidatorMethod):
 
 int_input = IntInputMethod()
 float_input = FloatInputMethod()
-money_input = FloatInputMethod(MONEY_RE)
 decimal_input = DecimalInputMethod()
+fmoney_input = FloatInputMethod(chars_to_remove=['$', ','], re_eval=MONEY_RE)
+dmoney_input = DecimalInputMethod(chars_to_remove=['$', ','], re_eval=MONEY_RE)
 date_input = DateInputMethod()
 password_input = MaskedInputMethod()
