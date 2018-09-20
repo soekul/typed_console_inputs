@@ -110,10 +110,12 @@ class MaskedInputMethod(RegExInputValidatorMethod):
             self.mask_char = mask_char
 
     def print_line(self, prompt_value, value, end=''):
-        args = [prompt_value]
+        input_mask = ""
         if self.mask_char != '':
-            args.append(self.mask_char * len(value))
-        print(end=end, flush=True, *args)
+            input_mask = self.mask_char * len(value)
+        print("{}{}".format(prompt_value, input_mask), end=end, flush=True)
+        if self.cursor_pos < len(value):
+            self.move_cursor_left((len(value) - self.cursor_pos))
 
     def __call__(self, prompt_val, mask_char=None, *args, **kwargs):
         old_char = None
