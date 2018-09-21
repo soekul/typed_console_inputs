@@ -1,6 +1,3 @@
-__author__ = 'Luke Stamm - soekul@soekul.com'
-
-
 import queue
 import re
 import threading
@@ -134,9 +131,6 @@ class RegExInputValidatorMethod(object):
         :return:
         """
         print("{}{}".format(prompt_value, value), end=end, flush=True)
-        # getch.stop_input()
-        # print("\nPos: {}\tLength: {}".format(self.cursor_pos, len(value)))
-        # getch.start_input()
         if self.cursor_pos < len(value):
             self.move_cursor_left((len(value) - self.cursor_pos))
 
@@ -285,12 +279,9 @@ class RegExInputValidatorMethod(object):
 
             elif ord(c) in [3, 4, 27]:  # ctrl+c, ctrl+d, escape
                 #  Exit if ctrl+c/d or escape are pressed
-                if ord(c) != 27:
+                if ord(c) != 27 or d is None:
                     self.handle_cancel()
                     ret_val = None
-                    break
-
-                if d is None:
                     break
 
                 if self.handle_escape_sequence(prompt_val, ret_val, esc_seq):

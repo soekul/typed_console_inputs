@@ -7,6 +7,7 @@ import re
 
 
 INT_RE = re.compile(r"^[0-9]{1,3}(,?[0-9]{3})*$")
+HEX_RE = re.compile(r"(0|\\)[xX][0-9a-fA-F]+")
 DECIMAL_RE = re.compile(r"^[0-9]{1,3}(,?[0-9]{3})*(\.[0-9]+)?$")
 MONEY_RE = re.compile(r"^\$?[0-9]{1,3}(,?[0-9]{3})*(\.[0-9]+)?$")
 
@@ -38,20 +39,27 @@ DATE_RE = re.compile(
         )
     )
 )
-# DATE_RE = re.compile(r"^((?P<Ayear>\d{4})[-/](?P<Amonth>(0?[1-9])|(1[012]))[-/](?P<Aday>(0?[1-9])|([12][0-9])|(3[01])))|((?P<Bmonth>(0?[1-9])|(1[012]))[-/](?P<Bday>(0?[1-9])|([12][0-9])|(3[01]))[-/](?P<Byear>\d{4}))$")
 
 
 class StandardCastMixin(object):
     type_class = int
+    type_class_args = []
+    type_class_kwargs = {}
 
     def __init__(self, *args, **kwargs):
-        if 'type_class' in kwargs:
-            self.type_class = kwargs.pop('type_class')
+        attribs = ['type_class', 'type_class_args', 'type_class_kwargs']
+        for attr in attribs:
+            if attr in kwargs:
+                setattr(self, attr, kwargs.pop(attr))
+
         super(StandardCastMixin, self).__init__(*args, **kwargs)
 
     def convert_value(self, value):
-        return self.type_class(super(StandardCastMixin, self)
-                               .convert_value(value))
+        return self.type_class(
+            super(StandardCastMixin, self).convert_value(value),
+            *self.type_class_args,
+            **self.type_class_kwargs
+        )
 
 
 class RemoveCharsMixin(object):
@@ -151,6 +159,9 @@ class MaskedInputMethod(RegExInputValidatorMethod):
 
 
 int_input = IntInputMethod()
+hex_input = IntInputMethod(chars_to_remove=['0x', '0X', '\\x', '\\X'],
+                           re_eval=HEX_RE,
+                           type_class_kwargs={'base': 16})
 float_input = FloatInputMethod()
 decimal_input = DecimalInputMethod()
 fmoney_input = FloatInputMethod(chars_to_remove=['$', ','], re_eval=MONEY_RE)
