@@ -1,4 +1,5 @@
 from .base import RegExInputValidatorMethod
+from .mixins import StandardCastMixin, RemoveCharsMixin
 
 
 import datetime
@@ -8,6 +9,7 @@ import re
 
 INT_RE = re.compile(r"^[0-9]{1,3}(,?[0-9]{3})*$")
 HEX_RE = re.compile(r"(0|\\)[xX][0-9a-fA-F]+")
+BIN_RE = re.compile(r"[bB][01]+")
 DECIMAL_RE = re.compile(r"^[0-9]{1,3}(,?[0-9]{3})*(\.[0-9]+)?$")
 MONEY_RE = re.compile(r"^\$?[0-9]{1,3}(,?[0-9]{3})*(\.[0-9]+)?$")
 
@@ -39,42 +41,6 @@ DATE_RE = re.compile(
         )
     )
 )
-
-
-class StandardCastMixin(object):
-    type_class = int
-    type_class_args = []
-    type_class_kwargs = {}
-
-    def __init__(self, *args, **kwargs):
-        attribs = ['type_class', 'type_class_args', 'type_class_kwargs']
-        for attr in attribs:
-            if attr in kwargs:
-                setattr(self, attr, kwargs.pop(attr))
-
-        super(StandardCastMixin, self).__init__(*args, **kwargs)
-
-    def convert_value(self, value):
-        return self.type_class(
-            super(StandardCastMixin, self).convert_value(value),
-            *self.type_class_args,
-            **self.type_class_kwargs
-        )
-
-
-class RemoveCharsMixin(object):
-    chars_to_remove = []
-
-    def __init__(self, *args, **kwargs):
-        if 'chars_to_remove' in kwargs:
-            self.chars_to_remove = kwargs.pop('chars_to_remove')
-        super(RemoveCharsMixin, self).__init__(*args, **kwargs)
-
-    def convert_value(self, value):
-        ret_val = value
-        for char in self.chars_to_remove:
-            ret_val = ret_val.replace(char, '')
-        return ret_val
 
 
 class IntInputMethod(StandardCastMixin, RemoveCharsMixin,
@@ -162,6 +128,9 @@ int_input = IntInputMethod()
 hex_input = IntInputMethod(chars_to_remove=['0x', '0X', '\\x', '\\X'],
                            re_eval=HEX_RE,
                            type_class_kwargs={'base': 16})
+bin_input = IntInputMethod(chars_to_remove=['b'],
+                           re_eval=BIN_RE,
+                           type_class_kwargs={'base': 2})
 float_input = FloatInputMethod()
 decimal_input = DecimalInputMethod()
 fmoney_input = FloatInputMethod(chars_to_remove=['$', ','], re_eval=MONEY_RE)

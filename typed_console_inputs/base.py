@@ -268,9 +268,15 @@ class RegExInputValidatorMethod(object):
             if c is None:
                 continue
 
-            if len(c) == 3:
+            if len(c) == 1:
+                pass
+            elif len(c) == 2:
+                continue
+            elif len(c) == 3:
                 esc_seq = c
                 c, d, e = list(c)
+            else:
+                continue
 
             if ord(c) == 13:  # carriage return
                 #  User has pressed enter, evaluate_value
